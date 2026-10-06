@@ -480,6 +480,10 @@
   @media (max-width:520px){
     .handle .pill{flex:1 1 100%}
   }
+  @media (max-width:400px){
+    .how ol{grid-template-columns:minmax(0,1fr)}
+    .how kbd{white-space:normal;overflow-wrap:anywhere}
+  }
   @media (prefers-reduced-motion:reduce){
     *{animation-duration:.001s!important;transition-duration:.001s!important}
     .busy::before,.stages li.now::before{animation:none!important}

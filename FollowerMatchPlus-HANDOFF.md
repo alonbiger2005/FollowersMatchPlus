@@ -272,7 +272,6 @@ Not bugs. Open options, roughly in order of value.
 - **Deploy.** Static host, drop the file. Not done yet.
 - **Favicon + Open Graph tags.** Currently none. Would matter when the link gets shared.
 - **A permitted data provider** for automatic mode. Everything else is ready (§3b).
-- **The guide overflows 8px at 320px** (pre-existing since v1.0.0): the `nowrap` `<kbd>Your information and permissions</kbd>` in step 1. Hidden by `body{overflow-x:hidden}` but measurable.
 - **Version string is hardcoded** as `v1.0.0` in the footer markup.
 - **"Follows you that you don't follow back"** is never shown. (The unused `inbound` count was removed when the engine was extracted; it is one line to add to `compareSocialGraph`.) Could be a second tab.
 - **Mutual-follow export** — currently no way to get the mutuals list out.
