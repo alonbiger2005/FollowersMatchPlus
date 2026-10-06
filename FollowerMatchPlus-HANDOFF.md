@@ -27,7 +27,7 @@ The user exports their own Instagram connections data, drops the two files into 
 - **Tagline / subheader:** *See the accounts that don't follow you back.*
 - **Wordmark:** `FollowerMatch+` — "Follower" white, "Match+" in the Instagram gradient. One continuous word, no space.
 - **App tile:** `FM+` on a gradient rounded square.
-- **Status:** v1.1.0. Export mode is feature-complete. Automatic (username) mode is fully built, but no permitted data provider exists, so it ships switched off (provider `none`). See §3b and `README.md`. Not yet deployed.
+- **Status:** v1.2.0, feature-complete and working. Accepts the whole Instagram download (`.zip`) in one drop. Not yet deployed.
 
 **The Match+ logic here is literal:** it is a set-difference engine. `following − followers = accounts that don't follow you back`.
 
@@ -37,8 +37,8 @@ The user exports their own Instagram connections data, drops the two files into 
 
 These are product decisions, not implementation details. Do not change them without being asked.
 
-1. **Single self-contained HTML file for the frontend.** No build step, no framework, no external JS/CSS. The page still deploys by dropping one file on any static host; export mode then works fully and the lookup card reports automatic lookup as unavailable. Since v1.1.0 an optional dependency-free Node server (`server.js`, `server/`) serves the page plus `/api` for automatic mode.
-2. **Export files never leave the device.** Export mode makes zero network calls: files are read with `FileReader` and compared in memory. Automatic mode sends only a username, and only to this site's own `/api` (CSP `connect-src 'self'`). No analytics, no CDN fonts. Never route export files through the backend.
+1. **Single self-contained HTML file.** No build step, no framework, no external JS/CSS. Deploys by dropping one file on any static host. (`package.json` exists only to run the tests.)
+2. **Zero network calls.** The app never uploads, never phones home, has no backend, no analytics, no fonts from a CDN. Files, including a dropped `.zip`, are read with `FileReader` and handled in memory. This is a privacy guarantee and a selling point — breaking it breaks the product. A test asserts the page makes no requests.
 3. **No bulk unfollow, ever.** Automating unfollows is what gets Instagram accounts flagged/banned. The app deliberately stops at "here is a link to the profile." Do not add automation, do not add an Instagram API integration, do not suggest one.
 4. **No login, no account, no signup.** Tool-first, consistent with the Match+ family.
 5. **Vanilla ES5-style JS.** `var`, `function`, no arrow functions in the app code, no optional chaining. It runs in in-app browsers (Instagram's, TikTok's) which are not always current. Keep it conservative.
@@ -75,21 +75,19 @@ The comparison itself is three lines: for each key in `following`, if it isn't i
 
 ---
 
-## 3b. Automatic mode (v1.1.0)
+## 3b. Username lookup: investigated and removed (v1.1.0 → v1.2.0)
 
-Two ingestion paths, one engine:
+v1.1.0 added a "type your username" mode with a Node backend and a pluggable data-provider layer. It was removed in v1.2.0 because it cannot work without breaking Instagram's terms:
 
-- **Export path:** `readHtml`/`readJson` → `merge()`.
-- **Username path:** `/api/profile` → confirm → page through `/api/followers` and `/api/following`.
+- **Logged-out access:** Instagram serves follower and following lists only to logged-in users. Logged-out requests, even for public accounts, redirect to `/accounts/login/` (verified Oct 2026, including the owner's public account).
+- **Official API:** the Instagram Graph API exposes follower counts, never lists, not even for your own account. Basic Display was shut down in Dec 2024.
+- **Workarounds:** a bot account, a third-party "followers API" (these run logged-in session pools) or a script in the user's own session all count as automated collection. Instagram's Terms of Use forbid that without Meta's express permission.
 
-Both build `{ lowercase handle: { u, t } }` maps and call **`compareSocialGraph(followers, following)`**. `show()` then paints the existing results UI. Automatic records have `t:null` and group under "Date unknown".
+The code is in git history at commit `0c25dc3` if Meta ever offers an official route. Do not re-add username lookup on any other basis.
 
-- **Provider seam:** `server/providers/index.js` documents the `SocialGraphProvider` contract. `none` is the default; `mock` serves `demo*` accounts for development and is refused under `NODE_ENV=production`.
-- **Why it's off:** there is no official API for follower lists. Business Discovery gives counts only, and Basic Display was shut down in Dec 2024. Logged-out web requests for follower lists redirect to login. Third-party vendors rely on logged-in session pools. Details are in `README.md`.
-- **Incomplete lists:** a list that stops early, repeats a cursor, or ends >10% short of the reported count shows **no results** (`FOLLOWERS_PARTIAL`/`FOLLOWING_PARTIAL`). Smaller gaps show results with a `#caution`.
-- **Abuse limits:** profile lookups, list pages and distinct accounts per client per hour are all rate-limited server-side. One analysis runs at a time.
+### The `.zip` box (v1.2.0)
 
-**Rules:** never add Instagram login, cookie/session upload, CAPTCHA solving or identity rotation, and never accept a provider that depends on them. Never show a partial list as a result. Never let mock data render without its "demo data" label.
+The whole Instagram download can be dropped as one `.zip`. The page reads only the archive's index and the `followers_N` / `following` entries (`Blob.slice` + the browser's `DecompressionStream`), never the whole file. A multi-GB download with media therefore still opens on a phone (150 MB in ~0.1 s in Chrome). Archives over 4 GB (ZIP64) are refused with advice to request only Followers and following.
 
 ---
 
@@ -117,7 +115,7 @@ This is the most important section. Each of these was a real failure discovered 
 
 **Rule:** never restore silent relocation. Warn, don't override.
 
-**Since v1.1.0, the one exception is a `.zip`.** A whole Instagram download holds both lists, so it is split by Instagram's own file names (`followers_N.*` vs `following.*`) wherever it is dropped. The result is visible in both boxes and Swap still works. Single list files still go exactly where the user puts them.
+**Since v1.2.0, the one exception is a `.zip`.** A whole Instagram download holds both lists, so it is split by Instagram's own file names (`followers_N.*` vs `following.*`) wherever it is dropped. The result is visible in both boxes and Swap still works. Single list files still go exactly where the user puts them.
 
 ### 4.3 Hash links navigate away in in-app browsers
 
@@ -125,11 +123,11 @@ This is the most important section. Each of these was a real failure discovered 
 
 **Cause:** it was `<a href="#decks">`. Embedded/in-app browsers frequently treat *any* href as a navigation and hand it to the system browser.
 
-**Fix:** both the CTA and the logo lockup are `<button>` elements with JS scroll handlers (`glide()`). **There are zero `href="#..."` in the file.** Keep it that way. Since v1.1.0 the CTA scrolls to the lookup card (`#lookup`), and "Use Instagram export instead" pins the guide (`#guide`) to the top via `glide(target, true)`.
+**Fix:** both the CTA and the logo lockup are `<button>` elements with JS scroll handlers (`glide()`). **There are zero `href="#..."` in the file.** Keep it that way.
 
 ### 4.6 Handles named like `Object.prototype` keys
 
-**Symptom (found in v1.1.0 testing):** an account called `constructor`, `toString` or `__proto__` was matched wrongly or dropped, because the handle maps and `seen`/`struck` were plain `{}` objects.
+**Symptom (found in v1.1.0 testing, present since v1.0.0):** an account called `constructor`, `toString` or `__proto__` was matched wrongly or dropped, because the handle maps and `seen`/`struck` were plain `{}` objects.
 
 **Fix:** all handle-keyed maps are `Object.create(null)`. Keep it that way for any new map keyed by handle.
 
@@ -179,18 +177,18 @@ wiped    = false     // results were discarded because inputs changed
 | `render()` / `apply()` | builds the grouped list; `apply` handles filtering |
 | `ticked()` / `syncButtons()` | selection state → button enablement |
 | `gauge()` | measures the sticky toolbar into `--barh` so year headers clear it |
-| `glide(target, pin)` | in-page scrolling (§4.3); `pin` forces top alignment |
+| `glide(target)` | in-page scrolling (§4.3) |
 | `compareSocialGraph(f, F)` | **the** engine: returns `{ followerCount, followingCount, mutualCount, oneWayCount, oneWayAccounts }` |
-| `show(res, f, F, from, source)` | paints any comparison into the results UI; `from` is `'export'` or `'auto'` |
+| `show(res, f, F)` | paints a comparison into the results UI |
+| `parseText(text, name)` | JSON-vs-HTML sniff + parse, shared by single files and `.zip` entries |
 | `route(side, list)` | sends `.zip` files to `openZips`, list files to `take` |
 | `openZips` / `zipIndex` / `zipEntries` / `zipText` / `paintZip` | the Instagram download box: reads the archive's index and only the list entries (`Blob.slice` + `DecompressionStream`), never the whole file |
-| `cleanHandle` / `api` / `lookup` / `offer` / `analyze` / `pull` / `drift` / `trouble` / `cancel` | automatic mode (§3b) |
 
 ### Element IDs
 
-`run` `swap` `jump` `home` `status` `out` `verdict` `source` `tally` `caution` `q` `count` `roll` `none` `strike` `restore` `decks` `deck-followers` `deck-following` `top` `lookup` `lookup-form` `handle` `check` `probe` `manual` `guide` `deck-zip`
+`run` `swap` `jump` `home` `status` `out` `verdict` `tally` `caution` `q` `count` `roll` `none` `strike` `restore` `decks` `deck-zip` `deck-followers` `deck-following` `top`
 
-New state: `origin` (`'export'|'auto'`). Export results are discarded when files change (§4.4); automatic results are not. Also `turn`, `working` and `known` for the lookup in flight.
+Files that came out of a `.zip` carry a `zip` property (the archive's name), so the download box can list and remove them together.
 
 ---
 
@@ -222,14 +220,14 @@ The visual design went through many rounds and is settled. **Treat it as authori
 - 840px max width, 20px gutters.
 - `.appbar` (64px) and `.appfoot` are full-bleed smoked-glass bars with the FM+ lockup; the footer has the copyright right-aligned on the same row.
 - Masthead `clamp(40px, 11.5vw, 86px)` — the 40px floor exists because `FollowerMatch+` has no space and cannot wrap; at 46px it overflowed a 320px viewport.
-- Below 400px the footer copyright shortens to `© 2026 · v1.1.0` (`.longname` hidden) to stay on one line.
+- Below 400px the footer copyright shortens to `© 2026 · v1.2.0` (`.longname` hidden) to stay on one line.
 - Two-level sticky: the results toolbar at `top:0`, year headers at `top:var(--barh)`, measured by `ResizeObserver`.
 
 ---
 
 ## 7. Testing
 
-Since v1.1.0 the suite lives in `test/` and runs with **`npm test`** (39 tests, including six for the `.zip` box against fixture archives built by `test/fixtures/make-zips.py`): API and error codes, username rules (one table shared by browser and server), the eight manual cases below, and automatic mode end to end against the real server with the mock provider. The original harness pattern, kept for reference:
+Since v1.1.0 the suite lives in `test/` and runs with **`npm test`** (15 tests, jsdom): the eight cases below, the `Object.prototype`-name case, six for the `.zip` box against fixture archives built by `test/fixtures/make-zips.py`, and a check that the page makes no network requests. The original harness pattern, kept for reference:
 
 ```js
 const fs = require('fs');
@@ -275,7 +273,6 @@ Not bugs. Open options, roughly in order of value.
 
 - **Deploy.** Static host, drop the file. Not done yet.
 - **Favicon + Open Graph tags.** Currently none. Would matter when the link gets shared.
-- **A permitted data provider** for automatic mode. Everything else is ready (§3b).
 - **Version string is hardcoded** as `v1.0.0` in the footer markup.
 - **"Follows you that you don't follow back"** is never shown. (The unused `inbound` count was removed when the engine was extracted; it is one line to add to `compareSocialGraph`.) Could be a second tab.
 - **Mutual-follow export** — currently no way to get the mutuals list out.

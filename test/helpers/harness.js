@@ -1,26 +1,16 @@
 'use strict';
 
-// Shared test plumbing: boot the real server on a free port, and load the
-// real page into jsdom wired to that server.
+// Shared test plumbing: load the real page into jsdom with file drops stubbed.
 
 const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM, VirtualConsole } = require('jsdom');
-const { createServer } = require('../../server');
 
 const PAGE = fs.readFileSync(path.join(__dirname, '..', '..', 'followermatch-plus.html'), 'utf8');
 
-async function boot(env) {
-  const server = createServer(Object.assign({ FMP_PROVIDER: 'mock', FMP_MOCK_DELAY_MS: '0', FMP_QUIET: '1' }, env));
-  await new Promise((r) => server.listen(0, '127.0.0.1', r));
-  const base = 'http://127.0.0.1:' + server.address().port;
-  return { base, close: () => new Promise((r) => server.close(r)) };
-}
-
-// Loads the page. `base` decides the page's origin; `fetchImpl` replaces the
-// network (defaults to real fetch against `base`). Every request path is
-// recorded in `calls`.
-function load(base, fetchImpl) {
+// Loads the page. Any network request it makes is recorded in `calls` and
+// refused: the app must never need one.
+function load(base) {
   const vc = new VirtualConsole();
   vc.on('jsdomError', (e) => { if (!/Not implemented/.test(e.message)) console.error(e); });
   const dom = new JSDOM(PAGE, {
@@ -38,12 +28,9 @@ function load(base, fetchImpl) {
   w.Response = Response;
   w.TextDecoder = TextDecoder;
   w.HTMLElement.prototype.scrollIntoView = function () {};
-  w.fetch = function (u, opts) {
-    const abs = new URL(u, base + '/');
-    calls.push(abs.pathname + abs.search);
-    const o = Object.assign({}, opts);
-    delete o.signal; // jsdom's AbortSignal isn't Node's
-    return (fetchImpl || fetch)(abs.href, o);
+  w.fetch = function (u) {
+    calls.push(String(u));
+    return Promise.reject(new TypeError('network disabled in tests'));
   };
   // Run the page's own script now that the stubs exist.
   const src = PAGE.slice(PAGE.indexOf('<script>') + 8, PAGE.indexOf('</script>'));
@@ -92,4 +79,4 @@ async function until(fn, ms, label) {
   }
 }
 
-module.exports = { boot, load, dropper, sleep, until };
+module.exports = { load, dropper, sleep, until };
