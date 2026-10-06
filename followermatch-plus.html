@@ -144,7 +144,7 @@
 
   /* ---------- steps ---------- */
   .how{margin:42px 0 0;padding:24px 24px 8px;animation:enter .6s .08s cubic-bezier(.2,.7,.3,1) both}
-  .how h2{
+  .how h2,.lookup h2{
     font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:.11em;
     text-transform:uppercase;color:var(--faint);margin:0 0 16px
   }
@@ -256,16 +256,16 @@
   .flag[hidden]{display:none}
 
   .swapline{display:flex;justify-content:center;margin:14px 0 0}
-  .swapline button{
+  .swapline button,.ghost{
     display:inline-flex;align-items:center;gap:8px;font-family:var(--body);font-size:13px;
     color:#fff;background:rgba(18,2,25,.55);border:1px solid var(--edge);border-radius:999px;
     padding:9px 17px;cursor:pointer;
     -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
     transition:background .15s ease,border-color .15s ease,opacity .15s ease
   }
-  .swapline button:hover:not(:disabled){background:rgba(40,5,54,.7);border-color:var(--edge-hi)}
-  .swapline button:disabled{opacity:.4;cursor:not-allowed}
-  .swapline svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .swapline button:hover:not(:disabled),.ghost:hover:not(:disabled){background:rgba(40,5,54,.7);border-color:var(--edge-hi)}
+  .swapline button:disabled,.ghost:disabled{opacity:.4;cursor:not-allowed}
+  .swapline svg,.ghost svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
   /* ---------- run ---------- */
   .go{margin:22px 0 0;display:flex;flex-direction:column;align-items:center;gap:12px;
@@ -287,6 +287,82 @@
   }
   .status.bad{color:#FFB3C9}
 
+  /* ---------- public-account lookup ---------- */
+  .lookup{margin:38px 0 0;padding:24px;animation:enter .6s .06s cubic-bezier(.2,.7,.3,1) both}
+  .handle{display:flex;flex-wrap:wrap;gap:10px;margin:0}
+  .field{
+    flex:1 1 230px;display:flex;align-items:center;gap:3px;padding:0 16px;border-radius:15px;min-width:0;
+    background:rgba(12,1,18,.42);border:1px solid var(--edge);cursor:text
+  }
+  .field:focus-within{border-color:rgba(255,184,1,.75);box-shadow:0 0 0 3px rgba(255,184,1,.18)}
+  .field b{font-family:var(--data);font-size:16px;font-weight:400;color:var(--faint)}
+  .field input{
+    border:0;outline:0;flex:1;min-width:0;padding:15px 0;background:transparent;color:var(--ink);
+    font-family:var(--data);font-size:16px;letter-spacing:-.015em
+  }
+  .field input::placeholder{color:var(--faint)}
+  .pill{
+    flex:0 0 auto;font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.02em;color:#2A0335;
+    background:#fff;border:0;border-radius:999px;padding:15px 26px;cursor:pointer;
+    box-shadow:0 12px 32px -14px rgba(10,0,18,.75);
+    transition:transform .16s ease,box-shadow .16s ease,opacity .16s ease
+  }
+  .pill:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 16px 40px -12px rgba(10,0,18,.85)}
+  .pill:active:not(:disabled){transform:scale(.985)}
+  .pill:disabled{opacity:.55;cursor:progress}
+  .lede{margin:14px 0 0;font-size:14.5px;line-height:1.55;color:var(--soft);max-width:62ch}
+  .lede b{color:var(--ink);font-weight:600}
+
+  .probe{margin:20px 0 0;padding:20px 0 0;border-top:1px solid var(--edge)}
+  .probe[hidden]{display:none}
+  .probe > .lede:first-child,.probe > .snag:first-child{margin-top:0}
+  .busy{display:flex;align-items:center;gap:12px;margin:0;font-size:14.5px;color:var(--soft)}
+  .busy::before,.stages li.now::before{
+    content:"";flex:0 0 auto;width:14px;height:14px;border-radius:50%;
+    border:2px solid #fff;border-top-color:transparent;animation:spin .8s linear infinite
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .who{display:flex;align-items:center;gap:14px;min-width:0}
+  .face{
+    width:52px;height:52px;flex:0 0 auto;border-radius:50%;object-fit:cover;
+    box-shadow:0 0 0 2px #fff,0 0 0 5px rgba(255,255,255,.14)
+  }
+  .who .id{flex:1;min-width:0}
+  .who .id b{display:block;font-family:var(--data);font-size:16px;font-weight:600;letter-spacing:-.015em;overflow-wrap:anywhere}
+  .who .id span{display:block;font-size:13.5px;color:var(--soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip{
+    flex:0 0 auto;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
+    padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.13);color:var(--ink)
+  }
+  .chip.locked{background:rgba(255,184,1,.16);color:#FFD9A8}
+  .mini{display:flex;gap:30px;margin:16px 0 0;padding:0}
+  .mini dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin:0 0 3px}
+  .mini dd{margin:0;font-family:var(--display);font-weight:750;font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .probe .row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:18px 0 0}
+  .stages{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:12px}
+  .stages li{
+    display:grid;grid-template-columns:16px 1fr auto;align-items:center;gap:4px 10px;
+    font-size:14px;color:var(--faint)
+  }
+  .stages li::before{
+    content:"";justify-self:center;width:8px;height:8px;border-radius:50%;border:2px solid rgba(255,255,255,.3)
+  }
+  .stages li.now{color:var(--ink)}
+  .stages li.done{color:var(--soft)}
+  .stages li.done::before{background:#fff;border-color:#fff}
+  .stages .n{font-family:var(--data);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .track{grid-column:2 / 4;display:block;height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}
+  .track i{display:block;height:100%;width:0;border-radius:inherit;background:var(--grad);transition:width .25s ease}
+  .snag{
+    margin:16px 0 0;padding:14px 16px;border-radius:14px;font-size:14px;line-height:1.55;
+    background:rgba(12,1,18,.4);border:1px solid rgba(254,112,4,.55);color:rgba(255,255,255,.84)
+  }
+  .snag b{display:block;margin-bottom:2px;color:#FFD9A8;font-weight:650}
+
+  .alt{display:flex;flex-direction:column;align-items:center;gap:10px;margin:22px 0 0;text-align:center}
+  .alt .status{margin:0}
+  .how:focus{outline:0}
+
   /* ---------- results ---------- */
   #out{margin-top:52px}
   #out[hidden]{display:none}
@@ -307,6 +383,12 @@
   .tally div:last-child{border-right:0}
   .tally dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin:0 0 3px}
   .tally dd{margin:0;font-family:var(--display);font-weight:750;font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .source{
+    display:inline-block;margin:0 0 14px;padding:5px 13px;border-radius:999px;font-size:12.5px;
+    color:rgba(255,255,255,.88);background:rgba(18,2,25,.5);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)
+  }
+  .source:empty{display:none}
   .caution{
     margin:0 0 18px;padding:14px 17px;border-radius:15px;background:rgba(24,2,33,.72);
     border:1px solid rgba(254,112,4,.55);
@@ -382,6 +464,7 @@
   @media (max-width:660px){
     .mast{padding-top:40px}
     .how{padding:22px 18px 6px}
+    .lookup{padding:22px 18px}
     .how ol{grid-template-columns:1fr;gap:18px}
     .how li{padding-bottom:0}
     .decks{grid-template-columns:1fr}
@@ -394,8 +477,12 @@
     .appfoot .inner{padding:18px 16px;gap:10px}
     .appfoot .meta{font-size:11.5px}
   }
+  @media (max-width:520px){
+    .handle .pill{flex:1 1 100%}
+  }
   @media (prefers-reduced-motion:reduce){
     *{animation-duration:.001s!important;transition-duration:.001s!important}
+    .busy::before,.stages li.now::before{animation:none!important}
   }
 </style>
 </head>
@@ -420,7 +507,30 @@
     <p>See the accounts that don't follow you back.</p>
   </header>
 
-  <section class="how glass">
+  <section class="lookup glass" id="lookup" aria-labelledby="lookup-title">
+    <h2 id="lookup-title">Check a public account</h2>
+    <form class="handle" id="lookup-form" novalidate>
+      <label class="field">
+        <b aria-hidden="true">@</b>
+        <input id="handle" type="text" name="username" placeholder="username" maxlength="200"
+               autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go"
+               aria-label="Instagram username or profile link">
+      </label>
+      <button class="pill" id="check" type="submit">Check account</button>
+    </form>
+    <p class="lede">Enter a public Instagram username or profile link and FollowerMatch+ compares its followers and following automatically. Available for supported public accounts. <b>No Instagram login required.</b></p>
+    <div class="probe" id="probe" hidden aria-live="polite"></div>
+  </section>
+
+  <div class="alt">
+    <p class="status">Private account — or automatic lookup unavailable?</p>
+    <button class="ghost" id="manual" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg>
+      Use Instagram export instead
+    </button>
+  </div>
+
+  <section class="how glass" id="guide" tabindex="-1">
     <h2>Getting your two files</h2>
     <ol>
       <li><strong>Open the export screen</strong>In the Instagram app: <kbd>Settings and privacy</kbd> → <kbd>Accounts Center</kbd> → <kbd>Your information and permissions</kbd> → <kbd>Download your information</kbd>.</li>
@@ -428,7 +538,7 @@
       <li><strong>Set the range and destination</strong>Date range <kbd>All time</kbd>, format <kbd>HTML</kbd> or <kbd>JSON</kbd>, and send it to <b>Google Drive</b> — then the files are already online and easy to grab. Submit, and wait for the email.</li>
       <li><strong>Unzip and drop them in</strong>Inside the archive, open <kbd>connections/followers_and_following/</kbd>. Drag every <b>followers</b> file into the left box and <b>following</b> into the right.</li>
     </ol>
-    <p class="tip"><b>Use All time for both.</b> If your followers file covers a shorter period than your following file, everyone you followed before that period looks like they never followed back — and the list comes out wildly inflated. This tool checks the dates and warns you if they don't line up.</p>
+    <p class="tip"><b>Use All time for both.</b> If your followers file covers a shorter period than your following file, everyone you followed before that period looks like they never followed back — and the list comes out wildly inflated. This tool checks the dates and warns you if they don't line up. Export files are read right here in your browser and never uploaded.</p>
   </section>
 
   <div class="decks" id="decks">
@@ -479,6 +589,7 @@
 
   <section id="out" hidden aria-live="polite">
     <h2 class="verdict" id="verdict"></h2>
+    <p class="source" id="source"></p>
     <dl class="tally glass" id="tally"></dl>
     <p class="caution" id="caution" hidden></p>
 
@@ -506,7 +617,7 @@
       <span class="tile" aria-hidden="true">FM+</span>
       <span class="brand">Follower<em>Match+</em></span>
     </span>
-    <span class="meta">&copy; 2026<span class="longname"> FollowerMatch+</span> &middot; v1.0.0</span>
+    <span class="meta">&copy; 2026<span class="longname"> FollowerMatch+</span> &middot; v1.1.0</span>
   </div>
 </div>
 
@@ -517,8 +628,9 @@
   var store = { followers:null, following:null };
   var files = { followers:[], following:[] };
   var master = [];          // full generated list, never mutated after a run
-  var struck = {};          // handles removed from view via Clear ticked
+  var struck = Object.create(null);  // handles removed from view via Clear ticked
   var wiped = false;        // results were discarded because the inputs changed
+  var origin = null;        // what produced the results on screen: 'export' | 'auto'
 
   var statusEl = document.getElementById('status');
   var runBtn = document.getElementById('run');
@@ -530,6 +642,7 @@
   var noneEl = document.getElementById('none');
   var strikeBtn = document.getElementById('strike');
   var restoreBtn = document.getElementById('restore');
+  var sourceEl = document.getElementById('source');
 
   var MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 
@@ -578,7 +691,7 @@
   function readHtml(text){
     var doc = new DOMParser().parseFromString(text, 'text/html');
     var links = doc.querySelectorAll('a[href*="instagram.com"]');
-    var rows = [], seen = {};
+    var rows = [], seen = Object.create(null);
     for(var i = 0; i < links.length; i++){
       var a = links[i];
       var h = handleFromHref(a.getAttribute('href'));
@@ -598,7 +711,7 @@
 
   function readJson(text){
     var data = JSON.parse(text);
-    var rows = [], seen = {}, hint = '';
+    var rows = [], seen = Object.create(null), hint = '';
     (function walk(node, path){
       if(!node || typeof node !== 'object') return;
       if(Array.isArray(node)){
@@ -695,7 +808,7 @@
   }
 
   function merge(side){
-    var map = {};
+    var map = Object.create(null);
     files[side].forEach(function(f){
       f.rows.forEach(function(r){
         var k = r.u.toLowerCase();
@@ -711,17 +824,19 @@
     out.classList.remove('reveal');
     rollHost.innerHTML = '';
     master = [];
-    struck = {};
+    struck = Object.create(null);
+    origin = null;
     qEl.value = '';
     countEl.textContent = '';
     noneEl.hidden = true;
     document.getElementById('caution').hidden = true;
+    sourceEl.textContent = '';
     syncButtons();
     return true;
   }
 
   function rebuild(){
-    wiped = clearResults();
+    wiped = origin === 'auto' ? false : clearResults();
     ['followers','following'].forEach(function(side){
       var deck = document.getElementById('deck-' + side);
       var lens = deck.querySelector('.lens');
@@ -790,47 +905,65 @@
     else say('Add both lists to begin.');
   }
 
-  /* ---------- compare ---------- */
+  /* ---------- compare (shared by both ingestion paths) ---------- */
 
-  runBtn.addEventListener('click', function(){
-    var followers = store.followers, following = store.following;
-    if(!followers || !following) return;
-
+  // followers / following: maps keyed by lowercase handle → { u, t }, where
+  // t is the follow date or null. The export reader and the automatic lookup
+  // both produce exactly this shape, and both come through here.
+  function compareSocialGraph(followers, following){
+    var fw = Object.keys(following);
     var oneWay = [];
-    Object.keys(following).forEach(function(k){ if(!followers[k]) oneWay.push(following[k]); });
+    fw.forEach(function(k){ if(!followers[k]) oneWay.push(following[k]); });
     oneWay.sort(function(a, b){
       if(a.t && b.t) return b.t - a.t;
       if(a.t) return -1;
       if(b.t) return 1;
       return a.u.localeCompare(b.u);
     });
+    return {
+      followerCount: Object.keys(followers).length,
+      followingCount: fw.length,
+      mutualCount: fw.length - oneWay.length,
+      oneWayCount: oneWay.length,
+      oneWayAccounts: oneWay
+    };
+  }
 
-    master = oneWay;
-    struck = {};
+  // Paints a comparison into the results UI, whichever path produced it.
+  function show(res, followers, following, from, source){
+    master = res.oneWayAccounts;
+    struck = Object.create(null);
     wiped = false;
+    origin = from;
+    var n = res.oneWayCount;
 
-    var fwN = Object.keys(following).length, frN = Object.keys(followers).length;
-    var inbound = 0;
-    Object.keys(followers).forEach(function(k){ if(!following[k]) inbound++; });
-
-    document.getElementById('verdict').innerHTML = oneWay.length
-      ? 'You follow <em>' + oneWay.length.toLocaleString() + '</em> ' +
-        (oneWay.length === 1 ? 'account' : 'accounts') + " that don't follow you back."
+    document.getElementById('verdict').innerHTML = n
+      ? 'You follow <em>' + n.toLocaleString() + '</em> ' +
+        (n === 1 ? 'account' : 'accounts') + " that don't follow you back."
       : 'Every account you follow follows you back.';
+    sourceEl.textContent = source;
 
     document.getElementById('tally').innerHTML =
-      cell('You follow', fwN) + cell('Follow you', frN) +
-      cell('Mutual', fwN - oneWay.length) + cell('One-way', oneWay.length);
+      cell('You follow', res.followingCount) + cell('Follow you', res.followerCount) +
+      cell('Mutual', res.mutualCount) + cell('One-way', n);
 
-    coverage(followers, following, oneWay);
+    coverage(followers, following, master);
     render();
 
     out.hidden = false;
     out.classList.remove('reveal');
     void out.offsetWidth;
     out.classList.add('reveal');
-    say(oneWay.length.toLocaleString() + ' found. Tap a handle to open the profile.');
+    say(n.toLocaleString() + ' found. Tap a handle to open the profile.');
     out.scrollIntoView({ block:'start', behavior:'smooth' });
+  }
+
+  runBtn.addEventListener('click', function(){
+    var followers = store.followers, following = store.following;
+    if(!followers || !following) return;
+    if(working) cancel();
+    show(compareSocialGraph(followers, following), followers, following, 'export',
+         'Analyzed from Instagram export');
   });
 
   function cell(label, n){
@@ -964,7 +1097,7 @@
 
   restoreBtn.addEventListener('click', function(){
     var gone = Object.keys(struck).length;
-    struck = {};
+    struck = Object.create(null);
     qEl.value = '';
     render();
     say('Restored the full list of ' + master.length.toLocaleString() +
@@ -978,7 +1111,7 @@
   if(window.ResizeObserver) new ResizeObserver(gauge).observe(bar);
   window.addEventListener('resize', gauge);
 
-  function glide(target){
+  function glide(target, pin){
     var soft = !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var top = 0;
 
@@ -986,8 +1119,8 @@
       var box = target.getBoundingClientRect();
       var here = window.pageYOffset || document.documentElement.scrollTop || 0;
       var view = window.innerHeight || document.documentElement.clientHeight;
-      // centre the pair when they fit, otherwise sit them just under the top edge
-      top = box.height < view - 48
+      // centre the target when it fits, otherwise (or when pinned) sit it just under the top edge
+      top = !pin && box.height < view - 48
         ? here + box.top - (view - box.height) / 2
         : here + box.top - 24;
       var floor = Math.max(0, (document.documentElement.scrollHeight || 0) - view);
@@ -999,8 +1132,10 @@
   }
 
   document.getElementById('jump').addEventListener('click', function(){
-    glide(document.getElementById('decks'));
+    glide(document.getElementById('lookup'));
   });
+
+  document.getElementById('manual').addEventListener('click', toManual);
 
   document.getElementById('home').addEventListener('click', function(){
     glide(null);
@@ -1015,6 +1150,409 @@
     });
     rebuild();
     say('Swapped. The two boxes have traded contents — generate the list again.');
+  });
+
+  /* ---------- automatic lookup (public accounts) ---------- */
+  // Fetches a public account's lists page by page from this site's own
+  // /api (never from Instagram directly), builds the same { u, t } maps the
+  // export reader builds, and hands them to compareSocialGraph(). Export
+  // files are never sent anywhere; this path only sends a username.
+
+  var guideEl = document.getElementById('guide');
+  var handleEl = document.getElementById('handle');
+  var checkBtn = document.getElementById('check');
+  var probe = document.getElementById('probe');
+
+  var turn = 0;             // bumped to abandon whatever lookup is in flight
+  var working = false;      // lists are loading
+  var known = null;         // last profile shown, so Cancel can return to it
+  var maxSize = null;       // account-size limit reported by the server
+  var MAX_PAGES = 2000;
+  var RETRY_WAIT = [1500, 4000];
+  var SOFT = { PROVIDER_RATE_LIMITED:1, PROVIDER_TIMEOUT:1, NETWORK_ERROR:1 };
+  var RESERVED = ['p','reel','reels','stories','explore','accounts','direct','legal','about','_u','tv','web'];
+
+  // [headline, explanation, worth retrying]
+  var WHY = {
+    INVALID_USERNAME: ["That doesn't look like an Instagram username.",
+      'Usernames use letters, numbers, periods and underscores, up to 30 characters. You can also paste a profile link.', false],
+    ACCOUNT_NOT_FOUND: ["We couldn't find that Instagram account.", 'Check the spelling and try again.', false],
+    PRIVATE_ACCOUNT: ['This account is private.',
+      'Automatic comparison works with accessible public accounts. You can still use FollowerMatch+ by importing your Instagram followers and following export.', false],
+    ACCOUNT_TOO_LARGE: ['This account is too large for automatic lookup.',
+      'Your Instagram export has no size limit, so use that instead.', false],
+    AUTOMATIC_LOOKUP_UNAVAILABLE: ['Automatic lookup is currently unavailable.',
+      'You can still get your list from your Instagram export. It works for public and private accounts, and the files never leave your device.', false],
+    PROVIDER_AUTH_ERROR: ['Automatic lookup is currently unavailable.',
+      'You can still get your list from your Instagram export. It works for public and private accounts, and the files never leave your device.', false],
+    PROVIDER_RATE_LIMITED: ['Automatic lookup is busy right now.',
+      'Try again in a few minutes, or use your Instagram export instead.', true],
+    RATE_LIMITED: ["You've run several lookups in a short time.",
+      'Wait a while before checking again, or use your Instagram export instead.', true],
+    PROVIDER_TIMEOUT: ['Automatic lookup took too long to respond.',
+      'Try again, or use your Instagram export instead.', true],
+    NETWORK_ERROR: ["Couldn't reach FollowerMatch+.", 'Check your connection and try again.', true],
+    FOLLOWERS_PARTIAL: ['Only part of the followers list could be loaded.', '', true],
+    FOLLOWING_PARTIAL: ['Only part of the following list could be loaded.', '', true],
+    UNKNOWN_ERROR: ['Something went wrong with automatic lookup.',
+      'Try again, or use your Instagram export instead.', true]
+  };
+
+  var CAUSE = {
+    PROVIDER_RATE_LIMITED: 'automatic lookup was rate-limited',
+    PROVIDER_TIMEOUT: 'the lookup timed out',
+    NETWORK_ERROR: 'the connection dropped',
+    RATE_LIMITED: 'the lookup limit was reached',
+    ENDED: 'the list stopped early'
+  };
+
+  // Accepts name, @name, or an instagram.com profile link; returns the bare
+  // lowercase username or null. Same rules as server/username.js.
+  function cleanHandle(raw){
+    var s = String(raw || '').trim();
+    if(!s || s.length > 200) return null;
+    var link = s.match(/^(?:https?:\/\/)?(?:(?:www|m)\.)?instagram\.com\/(?:_u\/)?([^\/?#\s]+)\/?(?:[?#].*)?$/i);
+    if(link) s = link[1];
+    s = s.replace(/^@/, '').toLowerCase();
+    if(!/^[a-z0-9._]{1,30}$/.test(s) || s.indexOf('..') > -1 || /\.$/.test(s)) return null;
+    if(RESERVED.indexOf(s) > -1) return null;
+    return s;
+  }
+
+  function fail(code, extra){
+    var e = { code: WHY[code] ? code : 'UNKNOWN_ERROR' };
+    if(extra) for(var k in extra) if(Object.prototype.hasOwnProperty.call(extra, k)) e[k] = extra[k];
+    return e;
+  }
+
+  function asFail(e){
+    if(e && e.code && WHY[e.code]) return e;
+    if(window.console) console.error(e);
+    return fail('UNKNOWN_ERROR');
+  }
+
+  function api(path){
+    if(location.protocol === 'file:' || !window.fetch) return Promise.reject(fail('AUTOMATIC_LOOKUP_UNAVAILABLE'));
+    var ctl = window.AbortController ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function(){ ctl.abort(); }, 45000) : 0;
+    var opts = { headers:{ Accept:'application/json' }, cache:'no-store', credentials:'omit' };
+    if(ctl) opts.signal = ctl.signal;
+    return fetch('api/' + path, opts).then(function(res){
+      return res.json().then(function(body){ return { res:res, body:body }; },
+                             function(){ return { res:res, body:null }; });
+    }, function(e){
+      throw fail(e && e.name === 'AbortError' ? 'PROVIDER_TIMEOUT' : 'NETWORK_ERROR');
+    }).then(function(r){
+      clearTimeout(timer);
+      if(r.body && r.body.ok === true) return r.body;
+      if(r.body && r.body.error && r.body.error.code) throw fail(r.body.error.code);
+      // Nothing is answering as the API: the page is on plain static hosting.
+      throw fail(r.res.status === 500 ? 'UNKNOWN_ERROR' : 'AUTOMATIC_LOOKUP_UNAVAILABLE');
+    }, function(e){
+      clearTimeout(timer);
+      throw e;
+    });
+  }
+
+  /* probe panel */
+
+  function el(tag, cls, text){
+    var n = document.createElement(tag);
+    if(cls) n.className = cls;
+    if(text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+
+  function paint(){
+    probe.innerHTML = '';
+    for(var i = 0; i < arguments.length; i++) if(arguments[i]) probe.appendChild(arguments[i]);
+    probe.hidden = false;
+  }
+
+  function card(p){
+    var who = el('div', 'who');
+    if(p.profilePicture){
+      var img = el('img', 'face');
+      img.alt = '';
+      img.setAttribute('referrerpolicy', 'no-referrer');
+      img.onerror = function(){ if(img.parentNode) img.parentNode.removeChild(img); };
+      img.src = p.profilePicture;
+      who.appendChild(img);
+    }
+    var id = el('div', 'id');
+    id.appendChild(el('b', null, '@' + p.username));
+    if(p.displayName) id.appendChild(el('span', null, p.displayName));
+    who.appendChild(id);
+    who.appendChild(el('span', p.isPrivate ? 'chip locked' : 'chip', p.isPrivate ? 'Private account' : 'Public account'));
+    return who;
+  }
+
+  function figures(p){
+    var dl = el('dl', 'mini');
+    [['Followers', p.followerCount], ['Following', p.followingCount]].forEach(function(f){
+      if(typeof f[1] !== 'number') return;
+      var d = el('div');
+      d.appendChild(el('dt', null, f[0]));
+      d.appendChild(el('dd', null, f[1].toLocaleString()));
+      dl.appendChild(d);
+    });
+    return dl.children.length ? dl : null;
+  }
+
+  function actions(list){
+    var row = el('div', 'row');
+    list.forEach(function(a){
+      var b = el('button', a.cls, a.label);
+      b.type = 'button';
+      b.addEventListener('click', a.fn);
+      row.appendChild(b);
+    });
+    return row;
+  }
+
+  function demoNote(p){
+    return p.demo ? el('p', 'lede', 'Demo data from the development provider, not a real Instagram account.') : null;
+  }
+
+  function trouble(err, retry, p){
+    err = asFail(err);
+    var w = WHY[err.code];
+    var text = w[1];
+    if(err.code === 'FOLLOWERS_PARTIAL' || err.code === 'FOLLOWING_PARTIAL') text = partialText(err);
+    if(err.code === 'ACCOUNT_TOO_LARGE' && maxSize) {
+      text = 'Automatic lookup handles accounts up to ' + maxSize.toLocaleString() + ' followers. ' + text;
+    }
+    var box = el('div', 'snag');
+    box.appendChild(el('b', null, w[0]));
+    box.appendChild(document.createTextNode(text));
+    var btns = [];
+    if(retry && w[2]) btns.push({ label:'Try again', cls:'pill', fn:retry });
+    if(err.code !== 'INVALID_USERNAME') btns.push({ label:'Use Instagram export instead', cls:'ghost', fn:toManual });
+    paint(p ? card(p) : null, p ? figures(p) : null, box, btns.length ? actions(btns) : null);
+  }
+
+  function partialText(err){
+    var followers = err.code === 'FOLLOWERS_PARTIAL';
+    var list = followers ? 'followers' : 'accounts you follow';
+    var head;
+    if(err.cause === 'SHORT'){
+      head = 'Instagram reports ' + err.total.toLocaleString() + ' ' + list + ', but only ' +
+             err.loaded.toLocaleString() + ' could be listed. ';
+    }else{
+      head = err.loaded.toLocaleString() + (typeof err.total === 'number' ? ' of ' + err.total.toLocaleString() : '') +
+             ' ' + list + ' loaded before ' + (CAUSE[err.cause] || CAUSE.ENDED) + '. ';
+    }
+    return head + (followers
+      ? 'A partial followers list would wrongly show people who do follow you back, so no results are shown. '
+      : 'A partial following list would leave accounts out, so no results are shown. ') +
+      'Try again, or use your Instagram export for a complete answer.';
+  }
+
+  /* flow */
+
+  function toManual(){
+    glide(guideEl, true);
+    try{ guideEl.focus({ preventScroll:true }); }catch(e){}
+  }
+
+  function cancel(){
+    turn++;
+    working = false;
+    checkBtn.disabled = false;
+    if(known) offer(known);
+    else probe.hidden = true;
+  }
+
+  function lookup(h){
+    var mine = ++turn;
+    working = false;
+    known = null;
+    checkBtn.disabled = true;
+    paint(el('p', 'busy', 'Finding @' + h + '…'));
+    api('profile?username=' + encodeURIComponent(h)).then(function(body){
+      if(mine !== turn) return;
+      checkBtn.disabled = false;
+      maxSize = typeof body.maxAccountSize === 'number' ? body.maxAccountSize : null;
+      known = body.profile;
+      known.demo = !!body.demo;
+      offer(known);
+    }, function(err){
+      if(mine !== turn) return;
+      checkBtn.disabled = false;
+      trouble(err, function(){ lookup(h); });
+    });
+  }
+
+  // Confirm the resolved account before the (possibly long) list download.
+  function offer(p){
+    if(p.isPrivate || p.reason === 'PRIVATE_ACCOUNT') return trouble(fail('PRIVATE_ACCOUNT'), null, p);
+    if(p.reason === 'ACCOUNT_TOO_LARGE') return trouble(fail('ACCOUNT_TOO_LARGE'), null, p);
+    paint(card(p), figures(p), demoNote(p),
+          actions([{ label:'Analyze followers', cls:'pill', fn:function(){ analyze(p); } }]));
+  }
+
+  function stage(text){
+    var li = el('li');
+    li.appendChild(el('span', null, text));
+    li.count = el('span', 'n');
+    li.appendChild(li.count);
+    return li;
+  }
+
+  function progress(li, n, total){
+    var sized = typeof total === 'number' && total > 0;
+    li.count.textContent = sized ? n.toLocaleString() + ' / ' + total.toLocaleString() : n.toLocaleString() + ' loaded';
+    if(!sized) return;
+    if(!li.bar){
+      li.track = el('span', 'track');
+      li.track.setAttribute('role', 'progressbar');
+      li.track.setAttribute('aria-valuemin', '0');
+      li.bar = el('i');
+      li.track.appendChild(li.bar);
+      li.appendChild(li.track);
+    }
+    li.track.setAttribute('aria-valuemax', String(total));
+    li.track.setAttribute('aria-valuenow', String(Math.min(n, total)));
+    li.bar.style.width = Math.min(100, n / total * 100) + '%';
+  }
+
+  // Walks every page of one list. Resolves { map, n } only when the provider
+  // says the list is finished; anything short of that rejects as partial.
+  function pull(list, p, mine, li){
+    var total = list === 'followers' ? p.followerCount : p.followingCount;
+    var partial = list === 'followers' ? 'FOLLOWERS_PARTIAL' : 'FOLLOWING_PARTIAL';
+    var map = Object.create(null), used = Object.create(null);
+    var n = 0, pages = 0, tries = 0, cursor = '';
+    progress(li, 0, total);
+
+    return new Promise(function(resolve, reject){
+      function stop(cause){ reject(fail(partial, { loaded:n, total:total, cause:cause })); }
+      function next(){
+        if(mine !== turn) return;
+        api(list + '?username=' + encodeURIComponent(p.username) +
+            (cursor ? '&cursor=' + encodeURIComponent(cursor) : '')).then(function(body){
+          if(mine !== turn) return;
+          tries = 0;
+          pages++;
+          var users = body.users || [];
+          for(var i = 0; i < users.length; i++){
+            var u = users[i] && users[i].username;
+            if(typeof u !== 'string' || !u) continue;
+            var k = u.toLowerCase();
+            if(!map[k]){ map[k] = { u:u, t:null }; n++; }
+          }
+          progress(li, n, total);
+          if(!body.hasMore){
+            if(typeof total === 'number' && total - n > total * 0.1) return stop('SHORT');
+            return resolve({ map:map, n:n });
+          }
+          var c = body.nextCursor;
+          if(!c || used[c] || pages >= MAX_PAGES) return stop('ENDED');
+          used[c] = 1;
+          cursor = c;
+          next();
+        }, function(err){
+          if(mine !== turn) return;
+          err = asFail(err);
+          if(SOFT[err.code] && tries < RETRY_WAIT.length){ setTimeout(next, RETRY_WAIT[tries++]); return; }
+          if(pages) stop(err.code);
+          else reject(err);
+        });
+      }
+      next();
+    });
+  }
+
+  // Instagram's own counts include deactivated and restricted accounts that
+  // are never listed, so a small shortfall is normal. Say so rather than
+  // presenting the answer as exact.
+  function drift(p, frN, fwN){
+    var gaps = [];
+    [['followers', p.followerCount, frN], ['accounts you follow', p.followingCount, fwN]].forEach(function(x){
+      var total = x[1], got = x[2];
+      if(typeof total !== 'number' || got >= total) return;
+      if(total - got > Math.max(10, Math.ceil(total * 0.01))){
+        gaps.push(total.toLocaleString() + ' ' + x[0] + ' but listed ' + got.toLocaleString());
+      }
+    });
+    if(!gaps.length) return null;
+    return '<b>Some accounts couldn’t be listed.</b> Instagram reports ' + gaps.join(', and ') +
+      '. Deactivated and restricted accounts are counted but not listed, so a small gap is normal — but a missing ' +
+      'follower would show up below as not following you back. Use your Instagram export for an exact answer.';
+  }
+
+  function analyze(p){
+    var mine = ++turn;
+    working = true;
+    clearResults();
+    wiped = false;
+
+    var rows = {
+      followers: stage('Loading followers…'),
+      following: stage('Loading following…'),
+      compare: stage('Comparing accounts…')
+    };
+    var ol = el('ol', 'stages');
+    var found = stage('Account found');
+    found.className = 'done';
+    ol.appendChild(found);
+    ol.appendChild(rows.followers);
+    ol.appendChild(rows.following);
+    ol.appendChild(rows.compare);
+    paint(card(p), ol, actions([{ label:'Cancel', cls:'ghost', fn:cancel }]));
+
+    var followers;
+    rows.followers.className = 'now';
+    pull('followers', p, mine, rows.followers).then(function(fr){
+      followers = fr;
+      rows.followers.className = 'done';
+      rows.following.className = 'now';
+      return pull('following', p, mine, rows.following);
+    }).then(function(following){
+      rows.following.className = 'done';
+      rows.compare.className = 'now';
+      // let the "Comparing" stage paint before the synchronous compare
+      return new Promise(function(r){ setTimeout(function(){ r(following); }, 30); });
+    }).then(function(following){
+      if(mine !== turn) return;
+      working = false;
+      var res = compareSocialGraph(followers.map, following.map);
+      rows.compare.className = 'done';
+      var done = stage('Done.');
+      done.className = 'done';
+      ol.appendChild(done);
+      probe.removeChild(probe.lastChild);
+      probe.appendChild(actions([{ label:'Run again', cls:'ghost', fn:function(){ analyze(p); } }]));
+
+      show(res, followers.map, following.map, 'auto',
+           'Analyzed automatically from @' + p.username + (p.demo ? ' · demo data, not a real account' : ''));
+      var note = drift(p, followers.n, following.n);
+      if(note){
+        var box = document.getElementById('caution');
+        box.innerHTML = note;
+        box.hidden = false;
+      }
+    }, function(err){
+      if(mine !== turn) return;
+      working = false;
+      trouble(err, function(){ analyze(p); }, p);
+    });
+  }
+
+  document.getElementById('lookup-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var h = cleanHandle(handleEl.value);
+    if(!h){
+      turn++;
+      working = false;
+      known = null;
+      checkBtn.disabled = false;
+      trouble(fail('INVALID_USERNAME'));
+      handleEl.focus();
+      return;
+    }
+    handleEl.value = h;
+    lookup(h);
   });
 
   wire('followers');

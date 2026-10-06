@@ -27,7 +27,7 @@ The user exports their own Instagram connections data, drops the two files into 
 - **Tagline / subheader:** *See the accounts that don't follow you back.*
 - **Wordmark:** `FollowerMatch+` — "Follower" white, "Match+" in the Instagram gradient. One continuous word, no space.
 - **App tile:** `FM+` on a gradient rounded square.
-- **Status:** feature-complete and working. v1.0.0. Not yet deployed.
+- **Status:** v1.1.0. Export mode is feature-complete. Automatic (username) mode is fully built, but no permitted data provider exists, so it ships switched off (provider `none`). See §3b and `README.md`. Not yet deployed.
 
 **The Match+ logic here is literal:** it is a set-difference engine. `following − followers = accounts that don't follow you back`.
 
@@ -37,8 +37,8 @@ The user exports their own Instagram connections data, drops the two files into 
 
 These are product decisions, not implementation details. Do not change them without being asked.
 
-1. **Single self-contained HTML file.** No build step, no framework, no npm, no external JS/CSS. Deploys by dropping one file on any static host. The entire app is ~940 lines: one `<style>`, one `<body>`, one IIFE `<script>`.
-2. **Zero network calls.** The app never uploads, never phones home, has no backend, no analytics, no fonts from a CDN. Files are read with `FileReader` and compared in memory. This is a privacy guarantee and a selling point — breaking it breaks the product.
+1. **Single self-contained HTML file for the frontend.** No build step, no framework, no external JS/CSS. The page still deploys by dropping one file on any static host; export mode then works fully and the lookup card reports automatic lookup as unavailable. Since v1.1.0 an optional dependency-free Node server (`server.js`, `server/`) serves the page plus `/api` for automatic mode.
+2. **Export files never leave the device.** Export mode makes zero network calls: files are read with `FileReader` and compared in memory. Automatic mode sends only a username, and only to this site's own `/api` (CSP `connect-src 'self'`). No analytics, no CDN fonts. Never route export files through the backend.
 3. **No bulk unfollow, ever.** Automating unfollows is what gets Instagram accounts flagged/banned. The app deliberately stops at "here is a link to the profile." Do not add automation, do not add an Instagram API integration, do not suggest one.
 4. **No login, no account, no signup.** Tool-first, consistent with the Match+ family.
 5. **Vanilla ES5-style JS.** `var`, `function`, no arrow functions in the app code, no optional chaining. It runs in in-app browsers (Instagram's, TikTok's) which are not always current. Keep it conservative.
@@ -75,6 +75,24 @@ The comparison itself is three lines: for each key in `following`, if it isn't i
 
 ---
 
+## 3b. Automatic mode (v1.1.0)
+
+Two ingestion paths, one engine:
+
+- **Export path:** `readHtml`/`readJson` → `merge()`.
+- **Username path:** `/api/profile` → confirm → page through `/api/followers` and `/api/following`.
+
+Both build `{ lowercase handle: { u, t } }` maps and call **`compareSocialGraph(followers, following)`**. `show()` then paints the existing results UI. Automatic records have `t:null` and group under "Date unknown".
+
+- **Provider seam:** `server/providers/index.js` documents the `SocialGraphProvider` contract. `none` is the default; `mock` serves `demo*` accounts for development and is refused under `NODE_ENV=production`.
+- **Why it's off:** there is no official API for follower lists. Business Discovery gives counts only, and Basic Display was shut down in Dec 2024. Logged-out web requests for follower lists redirect to login. Third-party vendors rely on logged-in session pools. Details are in `README.md`.
+- **Incomplete lists:** a list that stops early, repeats a cursor, or ends >10% short of the reported count shows **no results** (`FOLLOWERS_PARTIAL`/`FOLLOWING_PARTIAL`). Smaller gaps show results with a `#caution`.
+- **Abuse limits:** profile lookups, list pages and distinct accounts per client per hour are all rate-limited server-side. One analysis runs at a time.
+
+**Rules:** never add Instagram login, cookie/session upload, CAPTCHA solving or identity rotation, and never accept a provider that depends on them. Never show a partial list as a result. Never let mock data render without its "demo data" label.
+
+---
+
 ## 4. Bugs already found and fixed — DO NOT REINTRODUCE
 
 This is the most important section. Each of these was a real failure discovered in testing.
@@ -105,7 +123,13 @@ This is the most important section. Each of these was a real failure discovered 
 
 **Cause:** it was `<a href="#decks">`. Embedded/in-app browsers frequently treat *any* href as a navigation and hand it to the system browser.
 
-**Fix:** both the CTA and the logo lockup are `<button>` elements with JS scroll handlers (`glide()`). **There are zero `href="#..."` in the file.** Keep it that way.
+**Fix:** both the CTA and the logo lockup are `<button>` elements with JS scroll handlers (`glide()`). **There are zero `href="#..."` in the file.** Keep it that way. Since v1.1.0 the CTA scrolls to the lookup card (`#lookup`), and "Use Instagram export instead" pins the guide (`#guide`) to the top via `glide(target, true)`.
+
+### 4.6 Handles named like `Object.prototype` keys
+
+**Symptom (found in v1.1.0 testing):** an account called `constructor`, `toString` or `__proto__` was matched wrongly or dropped, because the handle maps and `seen`/`struck` were plain `{}` objects.
+
+**Fix:** all handle-keyed maps are `Object.create(null)`. Keep it that way for any new map keyed by handle.
 
 ### 4.4 Stale results after inputs change
 
@@ -153,11 +177,16 @@ wiped    = false     // results were discarded because inputs changed
 | `render()` / `apply()` | builds the grouped list; `apply` handles filtering |
 | `ticked()` / `syncButtons()` | selection state → button enablement |
 | `gauge()` | measures the sticky toolbar into `--barh` so year headers clear it |
-| `glide(target)` | in-page scrolling (§4.3) |
+| `glide(target, pin)` | in-page scrolling (§4.3); `pin` forces top alignment |
+| `compareSocialGraph(f, F)` | **the** engine: returns `{ followerCount, followingCount, mutualCount, oneWayCount, oneWayAccounts }` |
+| `show(res, f, F, from, source)` | paints any comparison into the results UI; `from` is `'export'` or `'auto'` |
+| `cleanHandle` / `api` / `lookup` / `offer` / `analyze` / `pull` / `drift` / `trouble` / `cancel` | automatic mode (§3b) |
 
 ### Element IDs
 
-`run` `swap` `jump` `home` `status` `out` `verdict` `tally` `caution` `q` `count` `roll` `none` `strike` `restore` `decks` `deck-followers` `deck-following` `top`
+`run` `swap` `jump` `home` `status` `out` `verdict` `source` `tally` `caution` `q` `count` `roll` `none` `strike` `restore` `decks` `deck-followers` `deck-following` `top` `lookup` `lookup-form` `handle` `check` `probe` `manual` `guide`
+
+New state: `origin` (`'export'|'auto'`). Export results are discarded when files change (§4.4); automatic results are not. Also `turn`, `working` and `known` for the lookup in flight.
 
 ---
 
@@ -189,14 +218,14 @@ The visual design went through many rounds and is settled. **Treat it as authori
 - 840px max width, 20px gutters.
 - `.appbar` (64px) and `.appfoot` are full-bleed smoked-glass bars with the FM+ lockup; the footer has the copyright right-aligned on the same row.
 - Masthead `clamp(40px, 11.5vw, 86px)` — the 40px floor exists because `FollowerMatch+` has no space and cannot wrap; at 46px it overflowed a 320px viewport.
-- Below 400px the footer copyright shortens to `© 2026 · v1.0.0` (`.longname` hidden) to stay on one line.
+- Below 400px the footer copyright shortens to `© 2026 · v1.1.0` (`.longname` hidden) to stay on one line.
 - Two-level sticky: the results toolbar at `top:0`, year headers at `top:var(--barh)`, measured by `ResizeObserver`.
 
 ---
 
 ## 7. Testing
 
-There is no test file in the repo — testing was done with throwaway **jsdom** harnesses. Recreate one before any non-trivial change; it catches regressions that eyeballing won't.
+Since v1.1.0 the suite lives in `test/` and runs with **`npm test`** (33 tests): API and error codes, username rules (one table shared by browser and server), the eight manual cases below, and automatic mode end to end against the real server with the mock provider. The original harness pattern, kept for reference:
 
 ```js
 const fs = require('fs');
@@ -242,9 +271,10 @@ Not bugs. Open options, roughly in order of value.
 
 - **Deploy.** Static host, drop the file. Not done yet.
 - **Favicon + Open Graph tags.** Currently none. Would matter when the link gets shared.
-- **The privacy explainer was removed** (the "Nothing leaves your device" panel). The guarantee is still true but nothing on the page says it. Worth re-adding somewhere lighter — the tip box in the guide is the natural home.
+- **A permitted data provider** for automatic mode. Everything else is ready (§3b).
+- **The guide overflows 8px at 320px** (pre-existing since v1.0.0): the `nowrap` `<kbd>Your information and permissions</kbd>` in step 1. Hidden by `body{overflow-x:hidden}` but measurable.
 - **Version string is hardcoded** as `v1.0.0` in the footer markup.
-- **"Follows you that you don't follow back"** is already computed internally but never shown. Could be a second tab.
+- **"Follows you that you don't follow back"** is never shown. (The unused `inbound` count was removed when the engine was extracted; it is one line to add to `compareSocialGraph`.) Could be a second tab.
 - **Mutual-follow export** — currently no way to get the mutuals list out.
 - **The guide's menu path** (Settings → Accounts Center → Your information and permissions → Download your information) was verified in 2026 but Instagram moves these. Re-check before launch.
 
