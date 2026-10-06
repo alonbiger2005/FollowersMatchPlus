@@ -426,3 +426,80 @@ test('no backend: static hosting, file://, network down, provider "none"', async
   await settle(down);
   assert.match(probeText(down.D), /Couldn't reach FollowerMatch\+\..*Try again/);
 });
+
+/* ---------------- one-step export (.zip) ---------------- */
+
+const fs = require('node:fs');
+const path = require('node:path');
+const ZIPS = {};
+for (const f of fs.readdirSync(path.join(__dirname, 'fixtures'))) {
+  if (f.endsWith('.zip')) ZIPS[f] = fs.readFileSync(path.join(__dirname, 'fixtures', f));
+}
+const chips = (D, deck) => Array.from(D.querySelectorAll('#' + deck + ' .files li span')).map((s) => s.textContent);
+
+test('zip: one drop finds both lists, ignores decoys, and generates the list', async () => {
+  const { D, drop } = manualPage(ZIPS);
+  drop('deck-zip', ['instagram-html.zip']);
+  await until(() => !$(D, 'out').hidden, 3000, 'auto-generated results');
+  assert.deepStrictEqual(tally(D), ['30', '25', '20', '10']);
+  assert.deepStrictEqual(chips(D, 'deck-followers'), ['followers_1.html', 'followers_2.html']);
+  assert.deepStrictEqual(chips(D, 'deck-following'), ['following.html']);
+  assert.deepStrictEqual(chips(D, 'deck-zip'), ['instagram-html.zip']);
+  assert.match(D.querySelector('#deck-zip .hint').textContent, /3 lists found inside/);
+  assert.ok(D.getElementById('deck-zip').classList.contains('armed'));
+  assert.strictEqual($(D, 'source').textContent, 'Analyzed from Instagram export');
+  assert.deepStrictEqual(years(D), ['2026', '2025', '2024'], 'dates survive the archive');
+  assert.strictEqual(D.querySelectorAll('.flag:not([hidden])').length, 0);
+});
+
+test('zip: JSON export, stored (uncompressed), inside a top-level folder', async () => {
+  const { D, drop } = manualPage(ZIPS);
+  drop('deck-zip', ['instagram-json-stored.zip']);
+  await until(() => !$(D, 'out').hidden, 3000);
+  assert.deepStrictEqual(tally(D), ['30', '25', '20', '10']);
+  assert.deepStrictEqual(chips(D, 'deck-followers'), ['followers_1.json']);
+});
+
+test('zip: streamed archive with data descriptors', async () => {
+  const { D, drop } = manualPage(ZIPS);
+  drop('deck-zip', ['instagram-streamed.zip']);
+  await until(() => !$(D, 'out').hidden, 3000);
+  assert.deepStrictEqual(tally(D), ['30', '25', '20', '10']);
+});
+
+test('zip: dropped on a list box it is still split by file name', async () => {
+  const { D, drop } = manualPage(ZIPS);
+  drop('deck-followers', ['instagram-html.zip']);
+  await until(() => !$(D, 'out').hidden, 3000);
+  assert.deepStrictEqual(tally(D), ['30', '25', '20', '10']);
+  assert.deepStrictEqual(chips(D, 'deck-following'), ['following.html']);
+});
+
+test('zip: removing the download clears both boxes and the results (§4.4)', async () => {
+  const { D, drop } = manualPage(ZIPS);
+  drop('deck-zip', ['instagram-html.zip']);
+  await until(() => !$(D, 'out').hidden, 3000);
+  D.querySelector('#deck-zip .files button').click();
+  assert.strictEqual($(D, 'out').hidden, true);
+  assert.deepStrictEqual([chips(D, 'deck-followers'), chips(D, 'deck-following'), chips(D, 'deck-zip')], [[], [], []]);
+  assert.strictEqual($(D, 'run').disabled, true);
+  assert.match($(D, 'status').textContent, /List cleared\. Add both lists/);
+});
+
+test('zip: bad archives, missing lists, wrong files and old browsers explain themselves', async () => {
+  const p = manualPage(Object.assign({ 'followers_1.html': PAIR_A['followers_1.html'] }, ZIPS));
+  p.drop('deck-zip', ['not-really.zip']);
+  await until(() => /isn't a \.zip archive/.test($(p.D, 'status').textContent), 3000);
+  assert.ok($(p.D, 'status').classList.contains('bad'));
+
+  p.drop('deck-zip', ['instagram-no-lists.zip']);
+  await until(() => /has no followers or following list in it/.test($(p.D, 'status').textContent), 3000);
+
+  p.drop('deck-zip', ['followers_1.html']);
+  await until(() => /That box takes the \.zip download/.test($(p.D, 'status').textContent), 3000);
+  assert.strictEqual($(p.D, 'out').hidden, true);
+
+  delete p.w.DecompressionStream;
+  p.drop('deck-zip', ['instagram-html.zip']);
+  await until(() => /can't open \.zip files\. Unzip the download/.test($(p.D, 'status').textContent), 3000);
+});

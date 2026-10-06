@@ -117,6 +117,8 @@ This is the most important section. Each of these was a real failure discovered 
 
 **Rule:** never restore silent relocation. Warn, don't override.
 
+**Since v1.1.0, the one exception is a `.zip`.** A whole Instagram download holds both lists, so it is split by Instagram's own file names (`followers_N.*` vs `following.*`) wherever it is dropped. The result is visible in both boxes and Swap still works. Single list files still go exactly where the user puts them.
+
 ### 4.3 Hash links navigate away in in-app browsers
 
 **Symptom:** the header "Start comparing" button opened an external page instead of scrolling.
@@ -180,11 +182,13 @@ wiped    = false     // results were discarded because inputs changed
 | `glide(target, pin)` | in-page scrolling (§4.3); `pin` forces top alignment |
 | `compareSocialGraph(f, F)` | **the** engine: returns `{ followerCount, followingCount, mutualCount, oneWayCount, oneWayAccounts }` |
 | `show(res, f, F, from, source)` | paints any comparison into the results UI; `from` is `'export'` or `'auto'` |
+| `route(side, list)` | sends `.zip` files to `openZips`, list files to `take` |
+| `openZips` / `zipIndex` / `zipEntries` / `zipText` / `paintZip` | the Instagram download box: reads the archive's index and only the list entries (`Blob.slice` + `DecompressionStream`), never the whole file |
 | `cleanHandle` / `api` / `lookup` / `offer` / `analyze` / `pull` / `drift` / `trouble` / `cancel` | automatic mode (§3b) |
 
 ### Element IDs
 
-`run` `swap` `jump` `home` `status` `out` `verdict` `source` `tally` `caution` `q` `count` `roll` `none` `strike` `restore` `decks` `deck-followers` `deck-following` `top` `lookup` `lookup-form` `handle` `check` `probe` `manual` `guide`
+`run` `swap` `jump` `home` `status` `out` `verdict` `source` `tally` `caution` `q` `count` `roll` `none` `strike` `restore` `decks` `deck-followers` `deck-following` `top` `lookup` `lookup-form` `handle` `check` `probe` `manual` `guide` `deck-zip`
 
 New state: `origin` (`'export'|'auto'`). Export results are discarded when files change (§4.4); automatic results are not. Also `turn`, `working` and `known` for the lookup in flight.
 
@@ -225,7 +229,7 @@ The visual design went through many rounds and is settled. **Treat it as authori
 
 ## 7. Testing
 
-Since v1.1.0 the suite lives in `test/` and runs with **`npm test`** (33 tests): API and error codes, username rules (one table shared by browser and server), the eight manual cases below, and automatic mode end to end against the real server with the mock provider. The original harness pattern, kept for reference:
+Since v1.1.0 the suite lives in `test/` and runs with **`npm test`** (39 tests, including six for the `.zip` box against fixture archives built by `test/fixtures/make-zips.py`): API and error codes, username rules (one table shared by browser and server), the eight manual cases below, and automatic mode end to end against the real server with the mock provider. The original harness pattern, kept for reference:
 
 ```js
 const fs = require('fs');

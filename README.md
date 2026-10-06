@@ -7,7 +7,7 @@ FollowerMatch+ has two ways in, both feeding one comparison engine
 
 | | Public account (automatic) | Private / manual (export) |
 |---|---|---|
-| You provide | a username or profile link | your Instagram data export |
+| You provide | a username or profile link | your Instagram download: one `.zip`, or the unzipped list files |
 | Data path | browser → this site's `/api` → provider | read in the browser, never uploaded |
 | Needs the server | yes | no (works from a static file) |
 | Status | **architecture complete; no provider connected** (see below) | complete, v1.0.0 behaviour unchanged |
@@ -82,7 +82,7 @@ npm install
 npm start                                 # http://localhost:3000, provider "none"
 FMP_PROVIDER=mock npm start               # demo accounts (macOS/Linux shell syntax)
 cp .env.example .env && npm run dev       # or configure through .env
-npm test                                  # 33 tests: API, username rules, page (jsdom)
+npm test                                  # 39 tests: API, username rules, page (jsdom), .zip box
 ```
 
 Demo accounts (mock provider):
@@ -118,7 +118,7 @@ The page needs no changes.
 
 ## Security and privacy
 
-- **Export files never leave the browser.** They are read with `FileReader` and compared in memory. Automatic mode sends only a username.
+- **Export files never leave the browser.** They are read with `FileReader` and compared in memory. A dropped `.zip` is opened in the browser too (`Blob.slice` + `DecompressionStream`): only its index and the followers/following entries are read, so even a multi-GB download opens on a phone. Automatic mode sends only a username.
 - **No Instagram login anywhere.** There are no password, cookie or session-token fields, and none will be added.
 - **Input validation.** Usernames are validated on both sides (`[a-z0-9._]{1,30}`, no `..`, no trailing `.`, no reserved paths). Cursors must be ≤512 printable ASCII.
 - **No URLs from the client.** The client never supplies a URL; providers build their own upstream requests, so there is no SSRF surface.

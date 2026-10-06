@@ -33,6 +33,10 @@ function load(base, fetchImpl) {
   const calls = [];
   const scrolls = [];
   w.scrollTo = function (a) { scrolls.push(a); };
+  // Browser APIs jsdom lacks; Node's own implementations stand in.
+  w.DecompressionStream = DecompressionStream;
+  w.Response = Response;
+  w.TextDecoder = TextDecoder;
   w.HTMLElement.prototype.scrollIntoView = function () {};
   w.fetch = function (u, opts) {
     const abs = new URL(u, base + '/');
@@ -48,16 +52,27 @@ function load(base, fetchImpl) {
 }
 
 // Synthesised drop of fixture files on a deck (as in the handoff harness).
+// A Buffer fixture becomes a slice-able binary file, like a real .zip.
 function dropper(w, fixtures) {
   w.FileReader = class {
     readAsText(f) {
       this.result = fixtures[f.name];
       setTimeout(() => this.onload && this.onload(), 0);
     }
+    readAsArrayBuffer(blob) {
+      const b = blob.bytes;
+      this.result = b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+      setTimeout(() => this.onload && this.onload(), 0);
+    }
+  };
+  const file = (n) => {
+    const data = fixtures[n];
+    if (!Buffer.isBuffer(data)) return { name: n };
+    return { name: n, size: data.length, type: 'application/zip', slice: (a, b) => ({ bytes: data.subarray(a, b) }) };
   };
   return function drop(deckId, names) {
     const d = w.document.getElementById(deckId);
-    const l = names.map((n) => ({ name: n }));
+    const l = names.map(file);
     l.item = (i) => l[i];
     const e = new w.Event('drop', { bubbles: true });
     Object.defineProperty(e, 'dataTransfer', { value: { files: l } });

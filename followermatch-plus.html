@@ -249,6 +249,15 @@
   .files button:hover{background:var(--rose)}
   input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 
+  /* the whole-download deck spans both columns above the two list decks */
+  .deck.whole{grid-column:1 / -1}
+  .deck.whole .pane{min-height:176px}
+  .split{grid-column:1 / -1;margin:0;text-align:center}
+  .split span{
+    display:inline-block;font-size:13px;color:rgba(255,255,255,.9);background:rgba(18,2,25,.5);
+    border-radius:999px;padding:5px 14px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)
+  }
+
   .flag{
     margin:2px 0 0;font-size:11px;line-height:1.4;color:#FFE0B4;letter-spacing:.01em;
     background:rgba(12,1,18,.5);border:1px solid rgba(255,184,1,.45);border-radius:9px;padding:5px 9px
@@ -540,12 +549,26 @@
       <li><strong>Open the export screen</strong>In the Instagram app: <kbd>Settings and privacy</kbd> → <kbd>Accounts Center</kbd> → <kbd>Your information and permissions</kbd> → <kbd>Download your information</kbd>.</li>
       <li><strong>Pick just the connections</strong>Choose <kbd>Some of your information</kbd>, scroll to <b>Connections</b>, and tick <b>Followers and following</b>.</li>
       <li><strong>Set the range and destination</strong>Date range <kbd>All time</kbd>, format <kbd>HTML</kbd> or <kbd>JSON</kbd>, and send it to <b>Google Drive</b> — then the files are already online and easy to grab. Submit, and wait for the email.</li>
-      <li><strong>Unzip and drop them in</strong>Inside the archive, open <kbd>connections/followers_and_following/</kbd>. Drag every <b>followers</b> file into the left box and <b>following</b> into the right.</li>
+      <li><strong>Drop the download in</strong>Add the <b>.zip</b> Instagram sends you to the <b>Instagram download</b> box. There's no need to unzip it: FollowerMatch+ finds both lists inside. Already unzipped? The files are in <kbd>connections/followers_and_following/</kbd>; drag every <b>followers</b> file into the left box and <b>following</b> into the right.</li>
     </ol>
     <p class="tip"><b>Use All time for both.</b> If your followers file covers a shorter period than your following file, everyone you followed before that period looks like they never followed back — and the list comes out wildly inflated. This tool checks the dates and warns you if they don't line up. Export files are read right here in your browser and never uploaded.</p>
   </section>
 
   <div class="decks" id="decks">
+    <div class="deck whole" id="deck-zip">
+      <div class="frame">
+        <div class="pane" tabindex="0" role="button" aria-label="Add your Instagram download (.zip)">
+          <span class="dot"></span>
+          <div class="lens"></div>
+          <h3>Instagram download</h3>
+          <p class="hint"></p>
+          <ul class="files"></ul>
+        </div>
+      </div>
+      <input type="file" multiple accept=".zip,application/zip,application/x-zip-compressed">
+    </div>
+    <p class="split"><span>or add the two lists separately</span></p>
+
     <div class="deck" id="deck-followers">
       <div class="frame">
         <div class="pane" tabindex="0" role="button" aria-label="Add followers files">
@@ -559,7 +582,7 @@
           <p class="flag" hidden></p>
         </div>
       </div>
-      <input type="file" multiple accept=".html,.htm,.json">
+      <input type="file" multiple accept=".html,.htm,.json,.zip">
     </div>
 
     <div class="deck" id="deck-following">
@@ -575,7 +598,7 @@
           <p class="flag" hidden></p>
         </div>
       </div>
-      <input type="file" multiple accept=".html,.htm,.json">
+      <input type="file" multiple accept=".html,.htm,.json,.zip">
     </div>
   </div>
 
@@ -740,16 +763,19 @@
     return { rows:rows, kind:sniff(hint) };
   }
 
+  function parseText(text, name){
+    var isJson = /\.json$/i.test(name) || /^\s*[\{\[]/.test(text.slice(0, 400));
+    var parsed = isJson ? readJson(text) : readHtml(text);
+    if(!parsed.rows.length) throw new Error('no profiles found in ' + name);
+    return parsed;
+  }
+
   function readFile(file){
     return new Promise(function(resolve, reject){
       var r = new FileReader();
       r.onload = function(){
         try{
-          var text = String(r.result);
-          var isJson = /\.json$/i.test(file.name) || /^\s*[\{\[]/.test(text.slice(0, 400));
-          var parsed = isJson ? readJson(text) : readHtml(text);
-          if(!parsed.rows.length) throw new Error('no profiles found in ' + file.name);
-          resolve(parsed);
+          resolve(parseText(String(r.result), file.name));
         }catch(e){ reject(new Error(file.name + ' — ' + (e.message || 'could not be read'))); }
       };
       r.onerror = function(){ reject(new Error("Couldn't open " + file.name)); };
@@ -769,7 +795,7 @@
       if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); input.click(); }
     });
     input.addEventListener('change', function(){
-      if(input.files && input.files.length) take(side, input.files);
+      if(input.files && input.files.length) route(side, input.files);
       input.value = '';
     });
 
@@ -784,8 +810,21 @@
       });
     });
     deck.addEventListener('drop', function(e){
-      if(e.dataTransfer && e.dataTransfer.files.length) take(side, e.dataTransfer.files);
+      if(e.dataTransfer && e.dataTransfer.files.length) route(side, e.dataTransfer.files);
     });
+  }
+
+  // A .zip holds both lists, so it is split by Instagram's own file names
+  // wherever it is dropped; single list files still go exactly where the
+  // user put them (§4.2).
+  function route(side, list){
+    var zips = [], plain = [];
+    for(var i = 0; i < list.length; i++) (isZip(list[i]) ? zips : plain).push(list[i]);
+    if(plain.length){
+      if(side === 'zip') say('That box takes the .zip download. Add single list files to the Followers and Following boxes.', true);
+      else take(side, plain);
+    }
+    if(zips.length) openZips(zips);
   }
 
   function take(side, list){
@@ -889,6 +928,7 @@
         hint.textContent = 'Tap to choose';
       }
     });
+    paintZip();
     runBtn.disabled = !(store.followers && store.following);
     swapBtn.disabled = !(files.followers.length || files.following.length);
   }
@@ -1156,6 +1196,149 @@
     say('Swapped. The two boxes have traded contents — generate the list again.');
   });
 
+  /* ---------- Instagram download (.zip) ---------- */
+  // Opens the archive in the browser and pulls out only the followers_N and
+  // following files. It reads the archive's index and those entries, never
+  // the whole file, so a full multi-gigabyte download still opens on a phone.
+
+  var LIST_FILE = /(?:^|\/)(followers(?:_\d+)?|following)\.(?:html?|json)$/i;
+  var ZIP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>';
+
+  function isZip(file){
+    return /\.zip$/i.test(file.name) || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
+  }
+
+  function readSlice(file, from, to){
+    return new Promise(function(resolve, reject){
+      var r = new FileReader();
+      r.onload = function(){ resolve(new Uint8Array(r.result)); };
+      r.onerror = function(){ reject(new Error("couldn't be opened")); };
+      r.readAsArrayBuffer(file.slice(from, to));
+    });
+  }
+
+  function zipIndex(file){
+    return readSlice(file, Math.max(0, file.size - 65557), file.size).then(function(tail){
+      var v = new DataView(tail.buffer, tail.byteOffset, tail.byteLength), end = -1;
+      for(var i = tail.length - 22; i >= 0; i--) if(v.getUint32(i, true) === 0x06054b50){ end = i; break; }
+      if(end < 0) throw new Error("isn't a .zip archive");
+      var count = v.getUint16(end + 10, true), size = v.getUint32(end + 12, true), at = v.getUint32(end + 16, true);
+      if(count === 0xffff || size === 0xffffffff || at === 0xffffffff){
+        throw new Error('is too large to open here. Request the export again with only Followers and following ticked.');
+      }
+      return readSlice(file, at, at + size).then(function(dir){ return zipEntries(dir, count); });
+    });
+  }
+
+  function zipEntries(dir, count){
+    var v = new DataView(dir.buffer, dir.byteOffset, dir.byteLength), at = 0, out = [];
+    var utf8 = new TextDecoder('utf-8');
+    for(var n = 0; n < count; n++){
+      if(at + 46 > dir.length || v.getUint32(at, true) !== 0x02014b50) throw new Error('is damaged');
+      var nameLen = v.getUint16(at + 28, true);
+      var path = utf8.decode(dir.subarray(at + 46, at + 46 + nameLen));
+      var m = path.match(LIST_FILE);
+      if(m && !/^__MACOSX\//.test(path)){
+        out.push({ name:path.slice(path.lastIndexOf('/') + 1),
+                   side:m[1].toLowerCase() === 'following' ? 'following' : 'followers',
+                   flags:v.getUint16(at + 8, true), method:v.getUint16(at + 10, true),
+                   size:v.getUint32(at + 20, true), local:v.getUint32(at + 42, true) });
+      }
+      at += 46 + nameLen + v.getUint16(at + 30, true) + v.getUint16(at + 32, true);
+    }
+    return out;
+  }
+
+  function zipText(file, e){
+    if(e.flags & 1) return Promise.reject(new Error('is encrypted'));
+    if(e.method !== 0 && e.method !== 8) return Promise.reject(new Error('uses a compression this browser can’t read'));
+    return readSlice(file, e.local, e.local + 30).then(function(head){
+      var v = new DataView(head.buffer, head.byteOffset, head.byteLength);
+      if(head.length < 30 || v.getUint32(0, true) !== 0x04034b50) throw new Error('is damaged');
+      var from = e.local + 30 + v.getUint16(26, true) + v.getUint16(28, true);
+      return readSlice(file, from, from + e.size);
+    }).then(function(raw){
+      if(e.method === 0) return raw;
+      return new Response(new Response(raw).body.pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+    }).then(function(buf){
+      return new TextDecoder('utf-8').decode(buf);
+    });
+  }
+
+  function openZips(list){
+    if(!window.DecompressionStream || !window.TextDecoder || !window.Response || !window.DataView){
+      say("This browser can't open .zip files. Unzip the download and add the files to the two boxes below.", true);
+      return;
+    }
+    say('Opening ' + (list.length === 1 ? list[0].name : list.length + ' downloads') + '…');
+    Promise.all(list.map(function(file){
+      return zipIndex(file).then(function(found){
+        if(!found.length) throw new Error('has no followers or following list in it. Request the export with Followers and following ticked.');
+        return Promise.all(found.map(function(e){
+          return zipText(file, e).then(function(text){ return { e:e, parsed:parseText(text, e.name) }; })
+            .then(null, function(err){ return { e:e, err:err }; });
+        }));
+      }).then(function(items){ return { file:file, items:items }; },
+              function(err){ return { file:file, err:err }; });
+    })).then(function(res){
+      var problems = [];
+      res.forEach(function(z){
+        if(z.err){ problems.push(z.file.name + ' — ' + (z.err.message || 'could not be read')); return; }
+        z.items.forEach(function(it){
+          if(it.err){ problems.push(it.e.name + ' — ' + (it.err.message || 'could not be read')); return; }
+          var says = it.parsed.kind;
+          files[it.e.side].push({ name:it.e.name, rows:it.parsed.rows, says:says,
+                                  mismatch:!!(says && says !== it.e.side), zip:z.file.name });
+        });
+      });
+      rebuild();
+      if(problems.length) say(problems[0], true);
+      else if(store.followers && store.following) runBtn.click();
+      else ready();
+    });
+  }
+
+  function paintZip(){
+    var deck = document.getElementById('deck-zip');
+    var ul = deck.querySelector('.files'), hint = deck.querySelector('.hint'), lens = deck.querySelector('.lens');
+    var zips = [], lists = 0;
+    ['followers','following'].forEach(function(side){
+      files[side].forEach(function(f){
+        if(!f.zip) return;
+        lists++;
+        if(zips.indexOf(f.zip) < 0) zips.push(f.zip);
+      });
+    });
+    deck.classList.toggle('armed', zips.length > 0);
+    ul.innerHTML = '';
+    if(!zips.length){
+      lens.innerHTML = ZIP_ICON;
+      hint.innerHTML = 'Tap to choose the <code>.zip</code> Instagram sent you';
+      return;
+    }
+    lens.textContent = lists;
+    hint.textContent = lists + (lists === 1 ? ' list' : ' lists') + ' found inside';
+    zips.forEach(function(name){
+      var li = document.createElement('li');
+      var sp = document.createElement('span');
+      sp.textContent = name;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Remove ' + name);
+      b.textContent = '×';
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        ['followers','following'].forEach(function(side){
+          files[side] = files[side].filter(function(f){ return f.zip !== name; });
+        });
+        rebuild();
+        ready();
+      });
+      li.append(sp, b);
+      ul.append(li);
+    });
+  }
+
   /* ---------- automatic lookup (public accounts) ---------- */
   // Fetches a public account's lists page by page from this site's own
   // /api (never from Instagram directly), builds the same { u, t } maps the
@@ -1186,9 +1369,9 @@
     ACCOUNT_TOO_LARGE: ['This account is too large for automatic lookup.',
       'Your Instagram export has no size limit, so use that instead.', false],
     AUTOMATIC_LOOKUP_UNAVAILABLE: ['Automatic lookup is currently unavailable.',
-      'You can still get your list from your Instagram export. It works for public and private accounts, and the files never leave your device.', false],
+      'Use your Instagram export instead: request it once, then drop the .zip Instagram sends you into FollowerMatch+. It works for public and private accounts, and the files never leave your device.', false],
     PROVIDER_AUTH_ERROR: ['Automatic lookup is currently unavailable.',
-      'You can still get your list from your Instagram export. It works for public and private accounts, and the files never leave your device.', false],
+      'Use your Instagram export instead: request it once, then drop the .zip Instagram sends you into FollowerMatch+. It works for public and private accounts, and the files never leave your device.', false],
     PROVIDER_RATE_LIMITED: ['Automatic lookup is busy right now.',
       'Try again in a few minutes, or use your Instagram export instead.', true],
     RATE_LIMITED: ["You've run several lookups in a short time.",
@@ -1559,6 +1742,7 @@
     lookup(h);
   });
 
+  wire('zip');
   wire('followers');
   wire('following');
   rebuild();
