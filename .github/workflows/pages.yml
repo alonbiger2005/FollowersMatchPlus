@@ -1,0 +1,50 @@
+# Publishes FollowerMatch+ to GitHub Pages: https://alonbiger2005.github.io/FollowersMatchPlus/
+# One-time setup: repo Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Runs the test suite first; a failing test blocks the deploy.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [claude/new-session-vl5ehc, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the site (the app is the home page)
+        run: |
+          mkdir _site
+          cp followermatch-plus.html _site/index.html
+          cp og-image.jpg _site/og-image.jpg
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

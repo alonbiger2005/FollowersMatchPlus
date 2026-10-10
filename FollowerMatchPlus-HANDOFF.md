@@ -27,7 +27,7 @@ The user exports their own Instagram connections data, drops the two files into 
 - **Tagline / subheader:** *See the accounts that don't follow you back.*
 - **Wordmark:** `FollowerMatch+` — "Follower" white, "Match+" in the Instagram gradient. One continuous word, no space.
 - **App tile:** `FM+` on a gradient rounded square.
-- **Status:** v1.2.0, feature-complete and working. Accepts the whole Instagram download (`.zip`) in one drop. Not yet deployed.
+- **Status:** v1.2.0, feature-complete and working. Accepts the whole Instagram download (`.zip`) in one drop. Deployed with GitHub Pages at https://alonbiger2005.github.io/FollowersMatchPlus/ (`.github/workflows/pages.yml`: tests, then publish).
 
 **The Match+ logic here is literal:** it is a set-difference engine. `following − followers = accounts that don't follow you back`.
 
@@ -271,8 +271,7 @@ Build synthetic fixtures rather than relying on real exports — the parsers mus
 
 Not bugs. Open options, roughly in order of value.
 
-- **Deploy.** Static host, drop the file. Not done yet.
-- **Favicon + Open Graph tags.** Currently none. Would matter when the link gets shared.
+- **Share tags point at the GitHub Pages address.** `og:url` / `og:image` in `<head>` hardcode https://alonbiger2005.github.io/FollowersMatchPlus/; update them if the site moves. The favicon is an inline SVG data URI (no request).
 - **Version string is hardcoded** as `v1.0.0` in the footer markup.
 - **"Follows you that you don't follow back"** is never shown. (The unused `inbound` count was removed when the engine was extracted; it is one line to add to `compareSocialGraph`.) Could be a second tab.
 - **Mutual-follow export** — currently no way to get the mutuals list out.

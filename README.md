@@ -19,7 +19,9 @@ Instagram shows follower and following lists only to logged-in users, even for p
 
 ## Deploy
 
-Upload `followermatch-plus.html` to any static host (rename it `index.html` if the host expects that). Nothing else is needed.
+Live at **https://alonbiger2005.github.io/FollowersMatchPlus/** via GitHub Pages. `.github/workflows/pages.yml` runs the tests and then publishes `followermatch-plus.html` as the site's `index.html`, together with `og-image.jpg` (the link-preview picture), on every push to the default branch. One-time setup: **Settings → Pages → Source: GitHub Actions**.
+
+Any other static host works too: upload `followermatch-plus.html` as `index.html` plus `og-image.jpg`. If the address changes, update the two `og:` URLs in the page's `<head>`.
 
 ## Development
 
